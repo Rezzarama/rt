@@ -1,9 +1,43 @@
 <!DOCTYPE html>
-<html lang="id">
-<head><meta charset="UTF-8"><title>Pengumuman</title><link rel="stylesheet" href="css/style.css"/></head>
+<html>
+<head>
+  <title>Rekap Jimpitan</title>
+  <style>
+    table { border-collapse: collapse; width: 100%; }
+    th, td { padding: 8px; border: 1px solid #aaa; text-align: center; }
+    th { background-color: #eee; }
+  </style>
+</head>
 <body>
-<header><h1>Pengumuman</h1></header>
-<main><p>Tidak ada pengumuman terbaru.</p></main>
-<footer><p>&copy; 2025 RT 05</p></footer>
+  <h2>Daftar Pembayaran Jimpitan</h2>
+  <table id="tabelJimpitan">
+    <thead id="thead"></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+
+  <script>
+    fetch("https://script.google.com/macros/s/AKfycby-IQsvPWP-D8ARMf3FjKVDaRVhchYb7FJx7qdItP6Gk8P8HGsVTjqfrhTuhlIaMOjpCA/exec") // ganti URL Apps Script kamu
+      .then(res => res.json())
+      .then(data => {
+        if (data.length === 0) return;
+
+        // Isi header
+        const headers = Object.keys(data[0]);
+        const thead = document.getElementById("thead");
+        thead.innerHTML = "<tr>" + headers.map(h => `<th>${h}</th>`).join("") + "</tr>";
+
+        // Isi body
+        const tbody = document.getElementById("tbody");
+        data.forEach(row => {
+          const tr = document.createElement("tr");
+          headers.forEach(h => {
+            const td = document.createElement("td");
+            td.textContent = row[h];
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        });
+      });
+  </script>
 </body>
 </html>
