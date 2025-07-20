@@ -5,6 +5,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Website RT 05 - Beranda</title>
   <link rel="stylesheet" href="css/style.css"/>
+
+  <style>
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      margin-top: 20px;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px 12px;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    thead {
+      background-color: #f1f1f1;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -21,71 +49,81 @@
     </nav>
   </header>
 
-  <h2>Daftar Pembayaran Jimpitan</h2>
-  <table id="tabelJimpitan">
-    <thead id="thead"></thead>
-    <tbody id="tbody"></tbody>
-  </table>
+  <main>
+    <h2>Daftar Pembayaran Jimpitan</h2>
+
+    <label for="bulan">Pilih Bulan:</label>
+    <input type="month" id="bulan" />
+
+    <div class="table-container">
+      <table id="tabelJimpitan">
+        <thead id="thead"></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </main>
 
   <script>
-    const tabel = document.getElementById("tabelPembayaran");
-const inputBulan = document.getElementById("bulan");
+    const tabel = document.getElementById("tabelJimpitan");
+    const inputBulan = document.getElementById("bulan");
+    let dataAsli = [];
 
-let dataAsli = []; // data dari fetch
+    // Ambil data dari Google Apps Script
+    fetch("https://script.google.com/macros/s/AKfycby-IQsvPWP-D8ARMf3FjKVDaRVhchYb7FJx7qdItP6Gk8P8HGsVTjqfrhTuhlIaMOjpCA/exec")
+      .then(res => res.json())
+      .then(data => {
+        dataAsli = data;
+        tampilkanTabel(data);
+      });
 
-// Ambil data dari Google Apps Script
-fetch("https://script.google.com/macros/s/AKfycb.../exec")
-  .then(res => res.json())
-  .then(data => {
-    dataAsli = data;
-    tampilkanTabel(data);
-  });
+    inputBulan.addEventListener("change", () => {
+      const bulanDipilih = inputBulan.value; // format: "2025-07"
+      if (!bulanDipilih) return;
 
-inputBulan.addEventListener("change", () => {
-  const bulanDipilih = inputBulan.value; // format: "2025-07"
-  if (!bulanDipilih) return;
+      const [tahun, bulan] = bulanDipilih.split("-");
+      const dataFiltered = dataAsli.map(row => {
+        const newRow = { Nama: row.Nama };
+        for (const [tanggal, nilai] of Object.entries(row)) {
+          if (tanggal === "Nama") continue;
+          const t = new Date(tanggal);
+          if (
+            t.getFullYear() == tahun &&
+            t.getMonth() + 1 == parseInt(bulan)
+          ) {
+            newRow[tanggal] = nilai;
+          }
+        }
+        return newRow;
+      });
+      tampilkanTabel(dataFiltered);
+    });
 
-  const [tahun, bulan] = bulanDipilih.split("-");
-  const dataFiltered = dataAsli.map(row => {
-    const newRow = { Nama: row.Nama };
-    for (const [tanggal, nilai] of Object.entries(row)) {
-      if (tanggal === "Nama") continue;
-      const t = new Date(tanggal);
-      if (
-        t.getFullYear() == tahun &&
-        t.getMonth() + 1 == parseInt(bulan)
-      ) {
-        newRow[tanggal] = nilai;
-      }
+    function tampilkanTabel(data) {
+      let html = "<tr><th>Nama</th>";
+      const semuaTanggal = new Set();
+
+      data.forEach(row => {
+        Object.keys(row).forEach(k => {
+          if (k !== "Nama") semuaTanggal.add(k);
+        });
+      });
+
+      // Urutkan tanggal berdasarkan waktu sebenarnya
+      const tanggalList = Array.from(semuaTanggal).sort((a, b) => new Date(a) - new Date(b));
+
+      tanggalList.forEach(tgl => html += `<th>${tgl}</th>`);
+      html += "</tr>";
+
+      data.forEach(row => {
+        html += `<tr><td>${row.Nama}</td>`;
+        tanggalList.forEach(tgl => {
+          html += `<td>${row[tgl] || "❌"}</td>`;
+        });
+        html += `</tr>`;
+      });
+
+      tabel.innerHTML = html;
     }
-    return newRow;
-  });
-  tampilkanTabel(dataFiltered);
-});
-
-function tampilkanTabel(data) {
-  let html = "<tr><th>Nama</th>";
-  const semuaTanggal = new Set();
-  data.forEach(row => {
-    Object.keys(row).forEach(k => {
-      if (k !== "Nama") semuaTanggal.add(k);
-    });
-  });
-
-  const tanggalList = Array.from(semuaTanggal).sort();
-  tanggalList.forEach(tgl => html += `<th>${tgl}</th>`);
-  html += "</tr>";
-
-  data.forEach(row => {
-    html += `<tr><td>${row.Nama}</td>`;
-    tanggalList.forEach(tgl => {
-      html += `<td>${row[tgl] || "❌"}</td>`;
-    });
-    html += `</tr>`;
-  });
-
-  tabel.innerHTML = html;
-}
   </script>
 
   <footer>
