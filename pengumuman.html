@@ -81,7 +81,7 @@ function tampilkanTabel(data) {
     tanggalList.forEach(tgl => {
       html += `<td>${row[tgl] || "❌"}</td>`;
     });
-    html += "</tr>`;
+    html += `</tr>`;
   });
 
   tabel.innerHTML = html;
