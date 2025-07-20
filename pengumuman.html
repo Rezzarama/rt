@@ -28,28 +28,64 @@
   </table>
 
   <script>
-    fetch("https://script.google.com/macros/s/AKfycby-IQsvPWP-D8ARMf3FjKVDaRVhchYb7FJx7qdItP6Gk8P8HGsVTjqfrhTuhlIaMOjpCA/exec") // ganti URL Apps Script kamu
-      .then(res => res.json())
-      .then(data => {
-        if (data.length === 0) return;
+    const tabel = document.getElementById("tabelPembayaran");
+const inputBulan = document.getElementById("bulan");
 
-        // Isi header
-        const headers = Object.keys(data[0]);
-        const thead = document.getElementById("thead");
-        thead.innerHTML = "<tr>" + headers.map(h => `<th>${h}</th>`).join("") + "</tr>";
+let dataAsli = []; // data dari fetch
 
-        // Isi body
-        const tbody = document.getElementById("tbody");
-        data.forEach(row => {
-          const tr = document.createElement("tr");
-          headers.forEach(h => {
-            const td = document.createElement("td");
-            td.textContent = row[h];
-            tr.appendChild(td);
-          });
-          tbody.appendChild(tr);
-        });
-      });
+// Ambil data dari Google Apps Script
+fetch("https://script.google.com/macros/s/AKfycb.../exec")
+  .then(res => res.json())
+  .then(data => {
+    dataAsli = data;
+    tampilkanTabel(data);
+  });
+
+inputBulan.addEventListener("change", () => {
+  const bulanDipilih = inputBulan.value; // format: "2025-07"
+  if (!bulanDipilih) return;
+
+  const [tahun, bulan] = bulanDipilih.split("-");
+  const dataFiltered = dataAsli.map(row => {
+    const newRow = { Nama: row.Nama };
+    for (const [tanggal, nilai] of Object.entries(row)) {
+      if (tanggal === "Nama") continue;
+      const t = new Date(tanggal);
+      if (
+        t.getFullYear() == tahun &&
+        t.getMonth() + 1 == parseInt(bulan)
+      ) {
+        newRow[tanggal] = nilai;
+      }
+    }
+    return newRow;
+  });
+  tampilkanTabel(dataFiltered);
+});
+
+function tampilkanTabel(data) {
+  let html = "<tr><th>Nama</th>";
+  const semuaTanggal = new Set();
+  data.forEach(row => {
+    Object.keys(row).forEach(k => {
+      if (k !== "Nama") semuaTanggal.add(k);
+    });
+  });
+
+  const tanggalList = Array.from(semuaTanggal).sort();
+  tanggalList.forEach(tgl => html += `<th>${tgl}</th>`);
+  html += "</tr>";
+
+  data.forEach(row => {
+    html += `<tr><td>${row.Nama}</td>`;
+    tanggalList.forEach(tgl => {
+      html += `<td>${row[tgl] || "❌"}</td>`;
+    });
+    html += "</tr>`;
+  });
+
+  tabel.innerHTML = html;
+}
   </script>
 
   <footer>
